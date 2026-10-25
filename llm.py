@@ -16,6 +16,21 @@ import requests
 TIMEOUT = 90
 
 
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434").rstrip("/")
+_ollama_seen = None
+
+
+def ollama_running():
+    """True if a local Ollama server answers. Checked once, then cached."""
+    global _ollama_seen
+    if _ollama_seen is None:
+        try:
+            _ollama_seen = requests.get(f"{OLLAMA_URL}/api/tags", timeout=1.5).ok
+        except requests.RequestException:
+            _ollama_seen = False
+    return _ollama_seen
+
+
 def get_provider():
     provider = os.getenv("LLM_PROVIDER", "").strip().lower()
     if provider:
@@ -24,7 +39,17 @@ def get_provider():
         return "anthropic"
     if os.getenv("OPENAI_API_KEY"):
         return "openai"
+    if ollama_running():
+        return "ollama"
     return "mock"
+
+
+def get_model():
+    return {
+        "anthropic": os.getenv("ANTHROPIC_MODEL", "claude-sonnet-5-5"),
+        "openai": os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+        "ollama": os.getenv("OLLAMA_MODEL", "llama3.2"),
+    }.get(get_provider(), "")
 
 
 class LLMError(Exception):
@@ -80,6 +105,33 @@ def _call_openai(system, prompt):
     return r.json()["choices"][0]["message"]["content"]
 
 
+def _call_ollama(system, prompt):
+    """Free, local AI through Ollama (https://ollama.com)."""
+    model = os.getenv("OLLAMA_MODEL", "llama3.2")
+    try:
+        r = requests.post(
+            f"{OLLAMA_URL}/api/chat",
+            json={
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": prompt},
+                ],
+                "format": "json",
+                "stream": False,
+                "options": {"temperature": 0.4},
+            },
+            timeout=300,  # local models can be slow on laptops
+        )
+    except requests.ConnectionError:
+        raise LLMError("Can't reach Ollama. Start the Ollama app, then try again.")
+    if r.status_code == 404:
+        raise LLMError(f"Ollama doesn't have the model '{model}'. Run: ollama pull {model}")
+    if r.status_code != 200:
+        raise LLMError(f"Ollama error {r.status_code}: {r.text[:300]}")
+    return r.json()["message"]["content"]
+
+
 def _extract_json(text):
     """Pull the first JSON object out of a model reply."""
     text = text.strip()
@@ -110,6 +162,8 @@ def ask_json(prompt):
         return _extract_json(_call_anthropic(SYSTEM, prompt))
     if provider == "openai":
         return _extract_json(_call_openai(SYSTEM, prompt))
+    if provider == "ollama":
+        return _extract_json(_call_ollama(SYSTEM, prompt))
     raise LLMError(f"Unknown LLM_PROVIDER '{provider}'.")
 
 

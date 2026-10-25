@@ -589,11 +589,12 @@ document.addEventListener("keydown", (e) => {
 // ---------------------------------------------------------------- start
 fetch("/api/status")
   .then((r) => r.json())
-  .then(({ provider }) => {
+  .then(({ provider, model }) => {
     $("provider").textContent = {
       anthropic: "AI: Claude",
       openai: "AI: OpenAI",
-      mock: "AI: offline demo mode (add an API key for real feedback)",
+      ollama: `AI: Ollama (${model}), free and local`,
+      mock: "AI: offline demo mode (start Ollama or add an API key for real feedback)",
     }[provider] || `AI: ${provider}`;
   })
   .catch(() => { $("provider").textContent = "AI server not reachable. Run python app.py"; });

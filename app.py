@@ -49,7 +49,7 @@ def index():
 
 @app.get("/api/status")
 def status():
-    return jsonify({"provider": llm.get_provider()})
+    return jsonify({"provider": llm.get_provider(), "model": llm.get_model()})
 
 
 @app.post("/api/quiz")
@@ -91,6 +91,6 @@ def flashcards():
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "5000"))
-    print(f"AI provider: {llm.get_provider()}")
+    print(f"AI provider: {llm.get_provider()} {llm.get_model()}")
     print(f"Open http://localhost:{port}")
     app.run(debug=True, port=port)
