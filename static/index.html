@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Margin Study</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="side">
+      <div class="brand">Margin</div>
+      <nav class="nav" aria-label="Main">
+        <button class="nav-btn" data-view="notes" aria-current="page">Notes</button>
+        <button class="nav-btn" data-view="quiz">Quiz</button>
+        <button class="nav-btn" data-view="cards">Flashcards</button>
+      </nav>
+      <p class="provider" id="provider">Checking AI…</p>
+    </aside>
+
+    <main class="main">
+      <!-- NOTES -->
+      <section class="view" id="view-notes">
+        <div class="notes-layout">
+          <div class="note-list-col">
+            <button class="btn btn-primary full" id="new-note">New note</button>
+            <ul class="note-list" id="note-list"></ul>
+          </div>
+
+          <div class="editor-col" id="editor-col">
+            <div class="empty" id="notes-empty">
+              <h2>Start with a note</h2>
+              <p>Write what you learned. Then quiz yourself on it or turn it into flashcards.</p>
+              <button class="btn btn-primary" id="new-note-empty">New note</button>
+            </div>
+
+            <div class="editor" id="editor" hidden>
+              <div class="editor-bar">
+                <div class="focus-start">
+                  <label for="focus-min" class="sr-only">Focus length in minutes</label>
+                  <select id="focus-min">
+                    <option value="10">10 min</option>
+                    <option value="25" selected>25 min</option>
+                    <option value="45">45 min</option>
+                    <option value="60">60 min</option>
+                  </select>
+                  <button class="btn btn-primary" id="focus-btn">Start focus</button>
+                </div>
+                <div class="bar-actions">
+                  <button class="btn" id="quiz-this">Quiz me</button>
+                  <button class="btn" id="cards-this">Make flashcards</button>
+                  <button class="btn btn-quiet" id="delete-note">Delete</button>
+                </div>
+              </div>
+              <div class="paper">
+                <input class="note-title" id="note-title" placeholder="Untitled note" aria-label="Note title">
+                <textarea class="ruled" id="note-body" placeholder="Start writing…" aria-label="Note text"></textarea>
+              </div>
+              <p class="saved" id="saved">Saved</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- QUIZ -->
+      <section class="view" id="view-quiz" hidden>
+        <div class="narrow">
+          <div id="quiz-setup">
+            <h1>Test yourself</h1>
+            <p class="lede">The AI writes questions from one of your notes, checks your answers and explains what you got wrong.</p>
+            <div class="form">
+              <label>Note
+                <select id="quiz-note"></select>
+              </label>
+              <fieldset class="seg" id="quiz-type">
+                <legend>Question type</legend>
+                <label><input type="radio" name="qtype" value="mc" checked><span>Multiple choice</span></label>
+                <label><input type="radio" name="qtype" value="written"><span>Written</span></label>
+                <label><input type="radio" name="qtype" value="mixed"><span>Mixed</span></label>
+              </fieldset>
+              <label>Number of questions
+                <input type="number" id="quiz-count" min="1" max="15" value="5">
+              </label>
+              <button class="btn btn-primary" id="quiz-start">Start quiz</button>
+              <p class="error" id="quiz-error" role="alert"></p>
+            </div>
+          </div>
+
+          <div id="quiz-run" hidden>
+            <div class="progress"><div class="progress-fill" id="quiz-progress"></div></div>
+            <p class="q-count" id="q-count"></p>
+            <div class="card-paper">
+              <h2 class="q-text" id="q-text"></h2>
+              <div id="q-body"></div>
+            </div>
+            <div class="feedback" id="q-feedback" hidden></div>
+            <div class="row end">
+              <button class="btn btn-quiet" id="quiz-quit">Quit quiz</button>
+              <button class="btn btn-primary" id="q-next" hidden>Next question</button>
+            </div>
+          </div>
+
+          <div id="quiz-done" hidden>
+            <h1 id="done-score"></h1>
+            <p class="lede" id="done-msg"></p>
+            <ol class="review" id="done-review"></ol>
+            <div class="row">
+              <button class="btn btn-primary" id="quiz-retry">New quiz on this note</button>
+              <button class="btn" id="quiz-back">Change settings</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FLASHCARDS -->
+      <section class="view" id="view-cards" hidden>
+        <div class="narrow wide">
+          <div id="deck-index">
+            <h1>Flashcards</h1>
+            <form class="row" id="deck-form">
+              <label class="grow"><span class="sr-only">Deck name</span>
+                <input id="deck-name" placeholder="New deck name, e.g. Biology chapter 3" required>
+              </label>
+              <button class="btn btn-primary">Create deck</button>
+            </form>
+            <ul class="deck-grid" id="deck-grid"></ul>
+          </div>
+
+          <div id="deck-detail" hidden>
+            <button class="link" id="deck-back">All decks</button>
+            <div class="row between">
+              <input class="deck-title" id="deck-title" aria-label="Deck name">
+              <div class="row">
+                <button class="btn btn-primary" id="study-btn">Study</button>
+                <button class="btn btn-quiet" id="delete-deck">Delete deck</button>
+              </div>
+            </div>
+
+            <div class="two">
+              <form class="panel" id="card-form">
+                <h3>Add a card</h3>
+                <label>Front<textarea id="card-front" rows="2" required placeholder="Question or term"></textarea></label>
+                <label>Back<textarea id="card-back" rows="3" required placeholder="Answer"></textarea></label>
+                <button class="btn btn-primary">Add card</button>
+              </form>
+              <div class="panel">
+                <h3>Make cards from a note</h3>
+                <label>Note<select id="gen-note"></select></label>
+                <label>How many<input type="number" id="gen-count" min="1" max="40" value="10"></label>
+                <button class="btn btn-primary" id="gen-btn">Generate with AI</button>
+                <p class="error" id="gen-error" role="alert"></p>
+              </div>
+            </div>
+
+            <h3 id="card-count"></h3>
+            <ul class="card-list" id="card-list"></ul>
+          </div>
+
+          <div id="study" hidden>
+            <div class="row between">
+              <button class="link" id="study-exit">Stop studying</button>
+              <span class="q-count" id="study-count"></span>
+            </div>
+            <div class="flip-wrap">
+              <button class="flip" id="flip" aria-live="polite">
+                <span class="face front"><span class="face-label">Question</span><span id="flip-front"></span></span>
+                <span class="face back"><span class="face-label">Answer</span><span id="flip-back"></span></span>
+              </button>
+            </div>
+            <p class="hint">Click the card or press Space to flip.</p>
+            <div class="row center" id="study-grade" hidden>
+              <button class="btn" id="again">Again <kbd>1</kbd></button>
+              <button class="btn btn-primary" id="got">Got it <kbd>2</kbd></button>
+            </div>
+            <div class="empty" id="study-done" hidden>
+              <h2>Deck finished</h2>
+              <p id="study-summary"></p>
+              <div class="row center">
+                <button class="btn btn-primary" id="study-restart">Study again</button>
+                <button class="btn" id="study-leave">Back to deck</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- FOCUS MODE -->
+  <div class="focus" id="focus" hidden>
+    <div class="focus-top">
+      <span class="focus-timer" id="focus-timer">25:00</span>
+      <button class="btn btn-quiet" id="focus-end">End focus</button>
+    </div>
+    <div class="paper focus-paper">
+      <input class="note-title" id="focus-title" aria-label="Note title">
+      <textarea class="ruled" id="focus-body" aria-label="Note text"></textarea>
+    </div>
+    <div class="focus-done" id="focus-done" hidden>
+      <div class="card-paper">
+        <h2>Focus session done</h2>
+        <p id="focus-done-msg"></p>
+        <div class="row center">
+          <button class="btn" id="focus-more">5 more minutes</button>
+          <button class="btn btn-primary" id="focus-close">Back to notes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
